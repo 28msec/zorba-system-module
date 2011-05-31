@@ -23,7 +23,7 @@
 # include <sys/utsname.h>
 #endif
 
-#include <zorba/zorbastring.h>
+#include <zorba/zorba_string.h>
 #include <zorba/singleton_item_sequence.h>
 #include <zorba/vector_item_sequence.h>
 #include <zorba/empty_sequence.h>
@@ -37,6 +37,7 @@ extern char** environ;
 #endif
 
 #include "system.h"
+
 
 namespace zorba { namespace system {
 
@@ -306,8 +307,8 @@ namespace zorba { namespace system {
 #endif
         lRes += *i;
       }
-    } else if (envS.startsWith("env.")) { 
-      if (!getEnv(envS.substring(4), lRes)) {
+    } else if (envS.substr(0,4) == "env.") {
+      if (!getEnv(envS.substr(3), lRes)) {
         return ItemSequence_t(new EmptySequence());
       }
 #ifdef LINUX
