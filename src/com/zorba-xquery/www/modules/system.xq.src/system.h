@@ -5,7 +5,7 @@
 
 #include <zorba/zorba.h>
 #include <zorba/external_module.h>
-#include <zorba/external_function.h>
+#include <zorba/function.h>
 
 namespace zorba { namespace system {
   class SystemModule : public ExternalModule {
