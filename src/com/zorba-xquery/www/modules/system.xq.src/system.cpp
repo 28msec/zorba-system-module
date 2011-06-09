@@ -89,7 +89,7 @@ namespace zorba { namespace system {
   {
   }
 
-  StatelessExternalFunction* SystemModule::getExternalFunction(const String& localName) {
+  ExternalFunction* SystemModule::getExternalFunction(const String& localName) {
     if (localName == "properties") {
       if (!thePropertiesFunction)
         thePropertiesFunction = new PropertiesFunction(this);
@@ -269,7 +269,7 @@ namespace zorba { namespace system {
   }
 
   ItemSequence_t PropertiesFunction::evaluate(
-      const StatelessExternalFunction::Arguments_t& args) const {
+      const ExternalFunction::Arguments_t& args) const {
     std::vector<Item> lRes;
     getEnvNames(lRes);
     for (std::map<String, String>::const_iterator i = theProperties.begin();
@@ -283,7 +283,7 @@ namespace zorba { namespace system {
   }
 
   ItemSequence_t PropertyFunction::evaluate(
-      const StatelessExternalFunction::Arguments_t& args,
+      const ExternalFunction::Arguments_t& args,
       const StaticContext* sctx,
       const DynamicContext* dctx) const {
     Item item;

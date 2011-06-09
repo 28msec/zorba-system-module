@@ -10,8 +10,8 @@
 namespace zorba { namespace system {
   class SystemModule : public ExternalModule {
     private:
-      StatelessExternalFunction* thePropertyFunction;
-      StatelessExternalFunction* thePropertiesFunction;
+      ExternalFunction* thePropertyFunction;
+      ExternalFunction* thePropertiesFunction;
       const static String SYSTEM_MODULE_NAMESPACE;
     public:
       SystemModule();
@@ -19,7 +19,7 @@ namespace zorba { namespace system {
     public:
       virtual String getURI() const { return SYSTEM_MODULE_NAMESPACE; }
 
-      virtual StatelessExternalFunction* getExternalFunction(const String& localName);
+      virtual ExternalFunction* getExternalFunction(const String& localName);
 
       virtual void destroy();
   };
@@ -38,25 +38,25 @@ namespace zorba { namespace system {
       String intToString(int v);
   };
 
-  class PropertiesFunction : public PureStatelessExternalFunction, public SystemFunction {
+  class PropertiesFunction : public NonContextualExternalFunction, public SystemFunction {
     public:
       PropertiesFunction(const ExternalModule* mod) : SystemFunction(mod) {}
 
       virtual String getLocalName() const { return "properties"; }
 
       virtual ItemSequence_t 
-      evaluate(const StatelessExternalFunction::Arguments_t& args) const;
+      evaluate(const ExternalFunction::Arguments_t& args) const;
       virtual String getURI() const { return SystemFunction::getURI(); }
   };
 
-  class PropertyFunction : public NonePureStatelessExternalFunction, public SystemFunction {
+  class PropertyFunction : public ContextualExternalFunction, public SystemFunction {
     public:
       PropertyFunction(const ExternalModule* mod) : SystemFunction(mod) {}
 
       virtual String getLocalName() const { return "property"; }
 
       virtual ItemSequence_t 
-      evaluate(const StatelessExternalFunction::Arguments_t& args,
+      evaluate(const ExternalFunction::Arguments_t& args,
                const StaticContext* sctx,
                const DynamicContext* dctx) const;
       virtual String getURI() const { return SystemFunction::getURI(); }
