@@ -76,6 +76,39 @@ declare variable $system:os-version as xs:string := "os.version";
 declare variable $system:os-arch as xs:string := "os.arch";
 
 (:~
+ : True if system arquitecture is 64bits
+ :)
+declare variable $system:os-is64 as xs:string := "os.is64";
+
+(:~
+ : number of logical processors in the system
+ :)
+declare variable $system:hardware-logical-cpu as xs:string := "hardware.logical.cpu";
+
+(:~
+ : number of physical processors in the system
+ :)
+declare variable $system:hardware-physical-cpu as xs:string := "hardware.physical.cpu";
+
+(:~
+ : number of logical per physical processors in the system
+ :)
+declare variable $system:hardware-logical-per-physical-cpu as xs:string := "hardware.logical.per.physical.cpu";
+
+(:~
+ : physical memory available
+ :)
+declare variable $system:hardware-physical-memory as xs:string := "hardware.physical.memory";
+(:~
+ : virtual memory available
+ :)
+declare variable $system:hardware-virtual-memory as xs:string := "hardware.virtual.memory";
+(:~
+ : Gets the hardware manufacturer
+ :)
+declare variable $system:hardware-manufacturer as xs:string := "hardware.manufacturer";
+
+(:~
  : The linux distribution, zorba is running on. This of course is only
  : available under Linux.
  :)

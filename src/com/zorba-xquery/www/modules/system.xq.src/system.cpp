@@ -18,9 +18,13 @@
 #include <sstream>
 
 #ifdef WIN32
-# include <Windows.h>
+  #include <Windows.h>
+  #include <malloc.h>    
+  #include <stdio.h>
+  #include <tchar.h>
+  #include <winreg.h>
 #else
-# include <sys/utsname.h>
+  #include <sys/utsname.h>
 #endif
 
 #include <zorba/zorba_string.h>
@@ -43,7 +47,126 @@ namespace zorba { namespace system {
 
   const String SystemModule::SYSTEM_MODULE_NAMESPACE = "http://www.zorba-xquery.com/modules/system";
 
+#ifdef WIN32
+  typedef BOOL (WINAPI *LPFN_GLPI)(
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, 
+    PDWORD);
+
+  // Helper function to count set bits in the processor mask.
+  DWORD CountSetBits(ULONG_PTR bitMask)
+  {
+    DWORD LSHIFT = sizeof(ULONG_PTR)*8 - 1;
+    DWORD bitSetCount = 0;
+    ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;    
+    DWORD i;
+    for (i = 0; i <= LSHIFT; ++i)
+    {
+      bitSetCount += ((bitMask & bitTest)?1:0);
+      bitTest/=2;
+    }
+
+    return bitSetCount;
+  }
+
+  DWORD numaNodeCount = 0;
+  DWORD processorPackageCount = 0;
+  DWORD logicalProcessorCount = 0;
+  DWORD processorCoreCount = 0;
+  DWORD processorL1CacheCount = 0;
+  DWORD processorL2CacheCount = 0;
+  DWORD processorL3CacheCount = 0;
+  static void countProcessors() {
+    LPFN_GLPI glpi;
+    BOOL done = FALSE;
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer = NULL;
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION ptr = NULL;
+    DWORD returnLength = 0;
+    DWORD byteOffset = 0;
+    PCACHE_DESCRIPTOR Cache;
+
+    glpi = (LPFN_GLPI) GetProcAddress(GetModuleHandle(TEXT("kernel32")), "GetLogicalProcessorInformation");
+    if (NULL == glpi) {
+      // GetLogicalProcessorInformation is not supported.
+      return;
+    }
+
+    while (!done)
+    {
+      DWORD rc = glpi(buffer, &returnLength);
+      if (FALSE == rc) 
+      {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) 
+        {
+          if (buffer) 
+			free(buffer);
+          buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(returnLength);
+          if (NULL == buffer) 
+          {
+            // Error: Allocation failure
+            return;
+          }
+        } else {
+          // Error %d, GetLastError()
+          return;
+        }
+      } else {
+        done = TRUE;
+      }
+    }
+    ptr = buffer;
+    while (byteOffset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= returnLength) 
+    {
+      switch (ptr->Relationship) 
+      {
+      case RelationNumaNode:
+        // Non-NUMA systems report a single record of this type.
+        numaNodeCount++;
+        break;
+      case RelationProcessorCore:
+        processorCoreCount++;
+        // A hyperthreaded core supplies more than one logical processor.
+        logicalProcessorCount += CountSetBits(ptr->ProcessorMask);
+        break;
+
+      case RelationCache:
+          // Cache data is in ptr->Cache, one CACHE_DESCRIPTOR structure for each cache. 
+          Cache = &ptr->Cache;
+          if (Cache->Level == 1)
+          {
+            processorL1CacheCount++;
+          }
+          else if (Cache->Level == 2)
+          {
+            processorL2CacheCount++;
+          }
+          else if (Cache->Level == 3)
+          {
+            processorL3CacheCount++;
+          }
+          break;
+        case RelationProcessorPackage:
+            // Logical processors share a physical package.
+          processorPackageCount++;
+          break;
+        default:
+          // Error: Unsupported LOGICAL_PROCESSOR_RELATIONSHIP value.
+          break;
+        }
+        byteOffset += sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+        ptr++;
+    }
+    free(buffer);
+    return;
+  }
+
+#endif
+
+
+
 #ifdef LINUX
+
+  static void countProcessors() {
+  }
 
   static void trim(std::string& str, char delim)
   {
@@ -111,11 +234,12 @@ namespace zorba { namespace system {
     delete thePropertiesFunction;
   }
 
+
   SystemFunction::SystemFunction(const ExternalModule* aModule)
     : theModule(aModule), theFactory(Zorba::getInstance(0)->getItemFactory())
   {
 #ifdef WIN32
-    theProperties.insert(std::make_pair("os.name", "Windows"));
+
     {
       DWORD nodeNameLength = MAX_COMPUTERNAME_LENGTH + 1;
       TCHAR nodeName[MAX_COMPUTERNAME_LENGTH + 1];
@@ -124,8 +248,10 @@ namespace zorba { namespace system {
       for (DWORD i = 0; i < nodeNameLength; ++i) {
         nodeNameC[i] = nodeName[i];
       }
+	  nodeNameC[nodeNameLength] = NULL;  // Terminate string
       theProperties.insert(std::make_pair("os.node.name", nodeNameC));
     }
+
     {
       DWORD dwVersion = 0; 
       DWORD dwMajorVersion = 0;
@@ -135,12 +261,10 @@ namespace zorba { namespace system {
       dwVersion = GetVersion();
 
       // Get the Windows version.
-
       dwMajorVersion = (DWORD)(LOBYTE(LOWORD(dwVersion)));
       dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
 
       // Get the build number.
-
       if (dwVersion < 0x80000000)              
         dwBuild = (DWORD)(HIWORD(dwVersion));
 
@@ -151,9 +275,9 @@ namespace zorba { namespace system {
         std::stringstream sMajor;
         sMajor << dwMajorVersion;
         std::stringstream sMinor;
-        sMajor << dwMinorVersion;
+        sMinor << dwMinorVersion;
         std::stringstream sBuild;
-        sMajor << dwBuild;
+        sBuild << dwBuild;
 
         major = sMajor.str();
         minor = sMinor.str();
@@ -163,6 +287,33 @@ namespace zorba { namespace system {
       theProperties.insert(std::make_pair("os.version.minor", minor));
       theProperties.insert(std::make_pair("os.version.build", build));
       theProperties.insert(std::make_pair("os.version", major + "." + minor + "." + build));
+      // http://msdn.microsoft.com/en-us/library/ms724832(v=VS.85).aspx
+      std::string operativeSystem;
+      theProperties.insert(std::make_pair("os.name", "Windows"));
+	  {
+	    countProcessors();
+	    std::stringstream logicalProcessors;
+	    logicalProcessors << processorPackageCount;
+	    std::stringstream physicalProcessors;
+	    physicalProcessors << logicalProcessorCount;
+	    std::stringstream logicalPerPhysicalProcessors;
+        logicalPerPhysicalProcessors << (logicalProcessorCount / processorPackageCount );
+        theProperties.insert(std::make_pair("hardware.physical.cpu", logicalProcessors.str() ));
+        theProperties.insert(std::make_pair("hardware.logical.cpu", physicalProcessors.str() ));
+        theProperties.insert(std::make_pair("hardware.logical.per.physical.cpu", logicalPerPhysicalProcessors.str() ));
+	  }
+	  {
+        MEMORYSTATUSEX statex;
+        statex.dwLength = sizeof (statex);
+        GlobalMemoryStatusEx (&statex);
+		std::stringstream virtualMemory;
+		virtualMemory << statex.ullTotalVirtual;
+		std::stringstream physicalMemory;
+		physicalMemory << statex.ullTotalPhys;
+        theProperties.insert(std::make_pair("hardware.virtual.memory", virtualMemory.str() ));
+        theProperties.insert(std::make_pair("hardware.physical.memory", physicalMemory.str() ));
+	  }
+
     }
     {
       DWORD userNameLength = 1023;
@@ -179,12 +330,34 @@ namespace zorba { namespace system {
       GetSystemInfo(&info);
       if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
         theProperties.insert(std::make_pair("os.arch", "x86_64"));
+        theProperties.insert(std::make_pair("os.is64", "true"));
       } else if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64) {
         theProperties.insert(std::make_pair("os.arch", "ia64"));
+        theProperties.insert(std::make_pair("os.is64", "true"));
       } else if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
         theProperties.insert(std::make_pair("os.arch", "i386"));
+        theProperties.insert(std::make_pair("os.is64", "false"));
       }
     }
+
+	{
+      HKEY keyHandle;
+      TCHAR value [1024];
+      char valueC [1024];
+      DWORD size;
+      DWORD Type;
+      if( RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_QUERY_VALUE, &keyHandle) == ERROR_SUCCESS)
+      {
+        RegQueryValueEx( keyHandle, L"SystemManufacturer", NULL, &Type, (LPBYTE)value, &size);
+      }     
+      RegCloseKey(keyHandle);
+      for (DWORD i = 0; i < size; ++i) {
+        valueC[i] = value[i];
+      }
+      theProperties.insert(std::make_pair("hardware.manufacturer", valueC));
+	}
+
+
 #else
     struct utsname osname;
     uname(&osname);
@@ -195,6 +368,7 @@ namespace zorba { namespace system {
     theProperties.insert(std::make_pair("os.version", osname.release));
     theProperties.insert(std::make_pair("os.arch", osname.machine));
     theProperties.insert(std::make_pair("user.name", getenv("USER")));
+    theProperties.insert(std::make_pair("os.is64", "false"));
 #endif
 #ifdef LINUX
     theProperties.insert(std::make_pair("linux.distributor", ""));
