@@ -1,12 +1,12 @@
 /*
  * Copyright 2006-2008 The FLWOR Foundation.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,7 +19,7 @@
 
 #ifdef WIN32
   #include <Windows.h>
-  #include <malloc.h>    
+  #include <malloc.h>
   #include <stdio.h>
   #include <tchar.h>
   #include <winreg.h>
@@ -35,6 +35,7 @@
 
 
 #ifdef LINUX
+#include <unistd.h>
 extern char** environ;
 #elif defined APPLE
 # include <crt_externs.h>
@@ -49,7 +50,7 @@ namespace zorba { namespace system {
 
 #ifdef WIN32
   typedef BOOL (WINAPI *LPFN_GLPI)(
-    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, 
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
     PDWORD);
 
   // Helper function to count set bits in the processor mask.
@@ -57,7 +58,7 @@ namespace zorba { namespace system {
   {
     DWORD LSHIFT = sizeof(ULONG_PTR)*8 - 1;
     DWORD bitSetCount = 0;
-    ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;    
+    ULONG_PTR bitTest = (ULONG_PTR)1 << LSHIFT;
     DWORD i;
     for (i = 0; i <= LSHIFT; ++i)
     {
@@ -93,14 +94,14 @@ namespace zorba { namespace system {
     while (!done)
     {
       DWORD rc = glpi(buffer, &returnLength);
-      if (FALSE == rc) 
+      if (FALSE == rc)
       {
-        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) 
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
-          if (buffer) 
+          if (buffer)
 			free(buffer);
           buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(returnLength);
-          if (NULL == buffer) 
+          if (NULL == buffer)
           {
             // Error: Allocation failure
             return;
@@ -114,9 +115,9 @@ namespace zorba { namespace system {
       }
     }
     ptr = buffer;
-    while (byteOffset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= returnLength) 
+    while (byteOffset + sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION) <= returnLength)
     {
-      switch (ptr->Relationship) 
+      switch (ptr->Relationship)
       {
       case RelationNumaNode:
         // Non-NUMA systems report a single record of this type.
@@ -129,7 +130,7 @@ namespace zorba { namespace system {
         break;
 
       case RelationCache:
-          // Cache data is in ptr->Cache, one CACHE_DESCRIPTOR structure for each cache. 
+          // Cache data is in ptr->Cache, one CACHE_DESCRIPTOR structure for each cache.
           Cache = &ptr->Cache;
           if (Cache->Level == 1)
           {
@@ -164,8 +165,49 @@ namespace zorba { namespace system {
 
 
 #ifdef LINUX
+  void cpuID(unsigned i, unsigned regs[4]) {
+    asm volatile ("cpuid" : "=a" (regs[0]), "=b" (regs[1]), "=c" (regs[2]), "=d" (regs[3]) : "a" (i), "c" (0));
+  }
+
+  unsigned logical;
+  unsigned cores;
 
   static void countProcessors() {
+
+    unsigned regs[4];
+
+    // Get vendor
+    char vendor[12];
+    cpuID(0, regs);
+    ((unsigned *)vendor)[0] = regs[1]; // EBX
+    ((unsigned *)vendor)[1] = regs[3]; // EDX
+    ((unsigned *)vendor)[2] = regs[2]; // ECX
+    std::string cpuVendor = std::string(vendor, 12);
+
+    // Get CPU features
+    cpuID(1, regs);
+    unsigned cpuFeatures = regs[3]; // EDX
+
+    if (cpuVendor == "GenuineIntel" && cpuFeatures & (1 << 28)) { // HTT bit
+      // Logical core count per CPU
+      cpuID(1, regs);
+      logical = (regs[1] >> 16) & 0xff; // EBX[23:16]
+
+      cores = logical;
+
+      if (cpuVendor == "GenuineIntel") {
+        // Get DCP cache info
+        cpuID(4, regs);
+        cores = ((regs[0] >> 26) & 0x3f) + 1; // EAX[31:26] + 1
+
+      } else if (cpuVendor == "AuthenticAMD") {
+        // Get NC: Number of CPU cores - 1
+        cpuID(0x80000008, regs);
+        cores = ((unsigned)(regs[2] & 0xff)) + 1; // ECX[7:0] + 1
+      }
+
+    }
+
   }
 
   static void trim(std::string& str, char delim)
@@ -253,9 +295,9 @@ namespace zorba { namespace system {
     }
 
     {
-      DWORD dwVersion = 0; 
+      DWORD dwVersion = 0;
       DWORD dwMajorVersion = 0;
-      DWORD dwMinorVersion = 0; 
+      DWORD dwMinorVersion = 0;
       DWORD dwBuild = 0;
 
       dwVersion = GetVersion();
@@ -265,7 +307,7 @@ namespace zorba { namespace system {
       dwMinorVersion = (DWORD)(HIBYTE(LOWORD(dwVersion)));
 
       // Get the build number.
-      if (dwVersion < 0x80000000)              
+      if (dwVersion < 0x80000000)
         dwBuild = (DWORD)(HIWORD(dwVersion));
 
       std::string major;
@@ -349,7 +391,7 @@ namespace zorba { namespace system {
       if( RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_QUERY_VALUE, &keyHandle) == ERROR_SUCCESS)
       {
         RegQueryValueEx( keyHandle, L"SystemManufacturer", NULL, &Type, (LPBYTE)value, &size);
-      }     
+      }
       RegCloseKey(keyHandle);
       for (DWORD i = 0; i < size; ++i) {
         valueC[i] = value[i];
@@ -369,6 +411,28 @@ namespace zorba { namespace system {
     theProperties.insert(std::make_pair("os.arch", osname.machine));
     theProperties.insert(std::make_pair("user.name", getenv("USER")));
     theProperties.insert(std::make_pair("os.is64", "false"));
+    {
+      countProcessors();
+      std::stringstream logicalProcessor;
+      std::stringstream physicalProcessor;
+      std::stringstream logicalPerPhysicalProcessors;
+      logicalProcessor << logical;
+      physicalProcessor << cores;
+      logicalPerPhysicalProcessors << (logical/(cores==0?1:cores));
+
+      theProperties.insert(std::make_pair("hardware.physical.cpu", physicalProcessor.str() ));
+      theProperties.insert(std::make_pair("hardware.logical.cpu", logicalProcessor.str() ));
+      theProperties.insert(std::make_pair("hardware.logical.per.physical.cpu", logicalPerPhysicalProcessors.str() ));
+    }
+    {
+      long pages = sysconf(_SC_PHYS_PAGES);
+      long page_size = sysconf(_SC_PAGE_SIZE);
+      std::stringstream memory;
+      memory << (pages * page_size);
+      //theProperties.insert(std::make_pair("hardware.virtual.memory", memory.str() ));
+      theProperties.insert(std::make_pair("hardware.physical.memory", memory.str() ));
+    }
+
 #endif
 #ifdef LINUX
     theProperties.insert(std::make_pair("linux.distributor", ""));
