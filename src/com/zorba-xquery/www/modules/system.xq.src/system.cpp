@@ -401,6 +401,7 @@ namespace zorba { namespace system {
 
 
 #else
+#if 0 /* DOES NOT COMPILE ON MAC OS X */
     struct utsname osname;
     uname(&osname);
     theProperties.insert(std::make_pair("os.name", osname.sysname));
@@ -433,6 +434,7 @@ namespace zorba { namespace system {
       theProperties.insert(std::make_pair("hardware.physical.memory", memory.str() ));
     }
 
+#endif /* 0 */
 #endif
 #ifdef LINUX
     theProperties.insert(std::make_pair("linux.distributor", ""));
