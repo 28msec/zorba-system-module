@@ -25,6 +25,7 @@
   #include <winreg.h>
 #else
   #include <sys/utsname.h>
+  #include <sys/sysinfo.h>
 #endif
 
 #include <zorba/zorba_string.h>
@@ -35,6 +36,9 @@
 
 
 #ifdef LINUX
+#include <iostream>
+#include <string>
+#include <fstream>
 #include <unistd.h>
 extern char** environ;
 #elif defined APPLE
@@ -165,50 +169,10 @@ namespace zorba { namespace system {
 
 
 #ifdef LINUX
-  void cpuID(unsigned i, unsigned regs[4]) {
-    asm volatile ("cpuid" : "=a" (regs[0]), "=b" (regs[1]), "=c" (regs[2]), "=d" (regs[3]) : "a" (i), "c" (0));
-  }
 
-  unsigned logical;
-  unsigned cores;
-
-  static void countProcessors() {
-
-    unsigned regs[4];
-
-    // Get vendor
-    char vendor[12];
-    cpuID(0, regs);
-    ((unsigned *)vendor)[0] = regs[1]; // EBX
-    ((unsigned *)vendor)[1] = regs[3]; // EDX
-    ((unsigned *)vendor)[2] = regs[2]; // ECX
-    std::string cpuVendor = std::string(vendor, 12);
-
-    // Get CPU features
-    cpuID(1, regs);
-    unsigned cpuFeatures = regs[3]; // EDX
-
-    if (cpuVendor == "GenuineIntel" && cpuFeatures & (1 << 28)) { // HTT bit
-      // Logical core count per CPU
-      cpuID(1, regs);
-      logical = (regs[1] >> 16) & 0xff; // EBX[23:16]
-
-      cores = logical;
-
-      if (cpuVendor == "GenuineIntel") {
-        // Get DCP cache info
-        cpuID(4, regs);
-        cores = ((regs[0] >> 26) & 0x3f) + 1; // EAX[31:26] + 1
-
-      } else if (cpuVendor == "AuthenticAMD") {
-        // Get NC: Number of CPU cores - 1
-        cpuID(0x80000008, regs);
-        cores = ((unsigned)(regs[2] & 0xff)) + 1; // ECX[7:0] + 1
-      }
-
-    }
-
-  }
+  int logical=0;
+  int cores=0;
+  int physical=0;
 
   static void trim(std::string& str, char delim)
   {
@@ -220,6 +184,38 @@ namespace zorba { namespace system {
     }
     else str.erase(str.begin(), str.end());
   }
+
+  static void countProcessors() {
+    logical=0;
+    cores=0;
+    physical=0;
+
+    std::ifstream in("/proc/cpuinfo");
+    if(in) {
+      std::string name;
+      std::string value;
+
+      while(in) {
+        getline(in, name, ':');
+        trim (name, ' ');
+        trim (name, '\t');
+        trim (name, '\n');
+        getline(in, value);
+        trim (value, ' ');
+        trim (value, '\t');
+        if (name == "processor") {
+          logical++;
+        }
+        
+        if (name == "cpu cores") {
+          cores = atoi(value.c_str());
+        }
+      }
+      physical = logical/cores;
+      in.close();
+    }
+  }
+
 
 
   static std::pair<std::string, std::string> getDistribution() {
@@ -401,7 +397,6 @@ namespace zorba { namespace system {
 
 
 #else
-#if 0 /* DOES NOT COMPILE ON MAC OS X */
     struct utsname osname;
     uname(&osname);
     theProperties.insert(std::make_pair("os.name", osname.sysname));
@@ -418,23 +413,27 @@ namespace zorba { namespace system {
       std::stringstream physicalProcessor;
       std::stringstream logicalPerPhysicalProcessors;
       logicalProcessor << logical;
-      physicalProcessor << cores;
-      logicalPerPhysicalProcessors << (logical/(cores==0?1:cores));
+      physicalProcessor << physical;
+      logicalPerPhysicalProcessors << cores;
 
       theProperties.insert(std::make_pair("hardware.physical.cpu", physicalProcessor.str() ));
       theProperties.insert(std::make_pair("hardware.logical.cpu", logicalProcessor.str() ));
       theProperties.insert(std::make_pair("hardware.logical.per.physical.cpu", logicalPerPhysicalProcessors.str() ));
     }
     {
-      long pages = sysconf(_SC_PHYS_PAGES);
-      long page_size = sysconf(_SC_PAGE_SIZE);
-      std::stringstream memory;
-      memory << (pages * page_size);
-      //theProperties.insert(std::make_pair("hardware.virtual.memory", memory.str() ));
-      theProperties.insert(std::make_pair("hardware.physical.memory", memory.str() ));
+	  struct sysinfo sys_info;
+	  if(sysinfo(&sys_info) == 0) {
+		long pages = sysconf(_SC_PHYS_PAGES);
+		long page_size = sysconf(_SC_PAGE_SIZE);
+		std::stringstream memory;
+		memory << sys_info.totalram;
+		std::stringstream swap;
+		swap << sys_info.totalswap;
+		theProperties.insert(std::make_pair("hardware.virtual.memory", swap.str() ));
+		theProperties.insert(std::make_pair("hardware.physical.memory", memory.str() ));
+      }
     }
 
-#endif /* 0 */
 #endif
 #ifdef LINUX
     theProperties.insert(std::make_pair("linux.distributor", ""));
