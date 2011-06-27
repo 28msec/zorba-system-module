@@ -284,7 +284,7 @@ namespace zorba { namespace system {
       char nodeNameC[MAX_COMPUTERNAME_LENGTH + 1];
       GetComputerName(nodeName, &nodeNameLength);
       for (DWORD i = 0; i < nodeNameLength; ++i) {
-        nodeNameC[i] = nodeName[i];
+        nodeNameC[i] = static_cast<char>(nodeName[i]);
       }
 	  nodeNameC[nodeNameLength] = NULL;  // Terminate string
       theProperties.insert(std::make_pair("os.node.name", nodeNameC));
@@ -359,7 +359,7 @@ namespace zorba { namespace system {
       char userNameC[1024];
       GetUserName(userName, &userNameLength);
       for (DWORD i = 0; i < userNameLength; ++i) {
-        userNameC[i] = userName[i];
+        userNameC[i] = static_cast<char>(userName[i]);
       }
       theProperties.insert(std::make_pair("user.name", userNameC));
     }
@@ -382,17 +382,18 @@ namespace zorba { namespace system {
       HKEY keyHandle;
       TCHAR value [1024];
       char valueC [1024];
-      DWORD size;
+      DWORD size = 0;
       DWORD Type;
       if( RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"HARDWARE\\DESCRIPTION\\System\\BIOS", 0, KEY_QUERY_VALUE, &keyHandle) == ERROR_SUCCESS)
       {
         RegQueryValueEx( keyHandle, L"SystemManufacturer", NULL, &Type, (LPBYTE)value, &size);
+        for (DWORD i = 0; i < size; ++i) {
+          valueC[i] = static_cast<char>(value[i]);
+        }
+        if (size > 0)
+          theProperties.insert(std::make_pair("hardware.manufacturer", valueC));
       }
       RegCloseKey(keyHandle);
-      for (DWORD i = 0; i < size; ++i) {
-        valueC[i] = value[i];
-      }
-      theProperties.insert(std::make_pair("hardware.manufacturer", valueC));
 	}
 
 
@@ -488,7 +489,8 @@ namespace zorba { namespace system {
       std::string name("env.");
       name += e.substr(0, e.find('='));
       String value = e.substr(e.find('=') + 1);
-      names.push_back(theFactory->createString(value));
+      if (name != "env.")
+        names.push_back(theFactory->createString(name));
       while(*l_EnvStr != '\0')
         l_EnvStr++;
       l_EnvStr++;
@@ -547,7 +549,8 @@ namespace zorba { namespace system {
         lRes += *i;
       }
     } else if (envS.substr(0,4) == "env.") {
-      if (!getEnv(envS.substr(3), lRes)) {
+      //Sleep(5000);
+      if (!getEnv(envS.substr(4), lRes)) {
         return ItemSequence_t(new EmptySequence());
       }
 #ifdef LINUX
