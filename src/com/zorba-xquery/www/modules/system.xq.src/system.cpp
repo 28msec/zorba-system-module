@@ -332,8 +332,8 @@ namespace zorba { namespace system {
       // http://msdn.microsoft.com/en-us/library/ms724832(v=VS.85).aspx
       std::string operativeSystem;
       theProperties.insert(std::make_pair("os.name", "Windows"));
+      countProcessors();
       {
-        countProcessors();
         std::stringstream logicalProcessors;
         logicalProcessors << processorPackageCount;
         std::stringstream physicalProcessors;
