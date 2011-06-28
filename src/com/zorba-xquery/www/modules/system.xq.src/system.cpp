@@ -18,16 +18,19 @@
 #include <sstream>
 
 #ifdef WIN32
-  #include <Windows.h>
-  #include <malloc.h>
-  #include <stdio.h>
-  #include <tchar.h>
-  #include <winreg.h>
+# include <Windows.h>
+# include <malloc.h>
+# include <stdio.h>
+# include <tchar.h>
+# include <winreg.h>
 #else
-  #include <sys/utsname.h>
-  #ifndef __APPLE__
-  #include <sys/sysinfo.h>
-  #endif
+#include <sys/utsname.h>
+# ifndef __APPLE__
+#   include <sys/sysinfo.h>
+# else
+#   include <sys/param.h>
+#   include <sys/sysctl.h>
+# endif
 #endif
 
 #include <zorba/zorba_string.h>
@@ -56,8 +59,8 @@ namespace zorba { namespace system {
 
 #ifdef WIN32
   typedef BOOL (WINAPI *LPFN_GLPI)(
-    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
-    PDWORD);
+      PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
+      PDWORD);
 
   // Helper function to count set bits in the processor mask.
   DWORD CountSetBits(ULONG_PTR bitMask)
@@ -105,7 +108,7 @@ namespace zorba { namespace system {
         if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
           if (buffer)
-			free(buffer);
+            free(buffer);
           buffer = (PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc(returnLength);
           if (NULL == buffer)
           {
@@ -125,17 +128,17 @@ namespace zorba { namespace system {
     {
       switch (ptr->Relationship)
       {
-      case RelationNumaNode:
-        // Non-NUMA systems report a single record of this type.
-        numaNodeCount++;
-        break;
-      case RelationProcessorCore:
-        processorCoreCount++;
-        // A hyperthreaded core supplies more than one logical processor.
-        logicalProcessorCount += CountSetBits(ptr->ProcessorMask);
-        break;
+        case RelationNumaNode:
+          // Non-NUMA systems report a single record of this type.
+          numaNodeCount++;
+          break;
+        case RelationProcessorCore:
+          processorCoreCount++;
+          // A hyperthreaded core supplies more than one logical processor.
+          logicalProcessorCount += CountSetBits(ptr->ProcessorMask);
+          break;
 
-      case RelationCache:
+        case RelationCache:
           // Cache data is in ptr->Cache, one CACHE_DESCRIPTOR structure for each cache.
           Cache = &ptr->Cache;
           if (Cache->Level == 1)
@@ -152,15 +155,15 @@ namespace zorba { namespace system {
           }
           break;
         case RelationProcessorPackage:
-            // Logical processors share a physical package.
+          // Logical processors share a physical package.
           processorPackageCount++;
           break;
         default:
           // Error: Unsupported LOGICAL_PROCESSOR_RELATIONSHIP value.
           break;
-        }
-        byteOffset += sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
-        ptr++;
+      }
+      byteOffset += sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+      ptr++;
     }
     free(buffer);
     return;
@@ -168,14 +171,7 @@ namespace zorba { namespace system {
 
 #endif
 
-
-
 #ifdef LINUX
-
-  int logical=0;
-  int cores=0;
-  int physical=0;
-
   static void trim(std::string& str, char delim)
   {
     std::string::size_type pos = str.find_last_not_of(delim);
@@ -186,6 +182,12 @@ namespace zorba { namespace system {
     }
     else str.erase(str.begin(), str.end());
   }
+
+
+  int logical=0;
+  int cores=0;
+  int physical=0;
+
 
   static void countProcessors() {
     logical=0;
@@ -208,7 +210,7 @@ namespace zorba { namespace system {
         if (name == "processor") {
           logical++;
         }
-        
+
         if (name == "cpu cores") {
           cores = atoi(value.c_str());
         }
@@ -288,7 +290,7 @@ namespace zorba { namespace system {
       for (DWORD i = 0; i < nodeNameLength; ++i) {
         nodeNameC[i] = static_cast<char>(nodeName[i]);
       }
-	  nodeNameC[nodeNameLength] = NULL;  // Terminate string
+      nodeNameC[nodeNameLength] = NULL;  // Terminate string
       theProperties.insert(std::make_pair("os.node.name", nodeNameC));
     }
 
@@ -330,29 +332,29 @@ namespace zorba { namespace system {
       // http://msdn.microsoft.com/en-us/library/ms724832(v=VS.85).aspx
       std::string operativeSystem;
       theProperties.insert(std::make_pair("os.name", "Windows"));
-	  {
-	    countProcessors();
-	    std::stringstream logicalProcessors;
-	    logicalProcessors << processorPackageCount;
-	    std::stringstream physicalProcessors;
-	    physicalProcessors << logicalProcessorCount;
-	    std::stringstream logicalPerPhysicalProcessors;
+      {
+        countProcessors();
+        std::stringstream logicalProcessors;
+        logicalProcessors << processorPackageCount;
+        std::stringstream physicalProcessors;
+        physicalProcessors << logicalProcessorCount;
+        std::stringstream logicalPerPhysicalProcessors;
         logicalPerPhysicalProcessors << (logicalProcessorCount / processorPackageCount );
         theProperties.insert(std::make_pair("hardware.physical.cpu", logicalProcessors.str() ));
         theProperties.insert(std::make_pair("hardware.logical.cpu", physicalProcessors.str() ));
         theProperties.insert(std::make_pair("hardware.logical.per.physical.cpu", logicalPerPhysicalProcessors.str() ));
-	  }
-	  {
+      }
+      {
         MEMORYSTATUSEX statex;
         statex.dwLength = sizeof (statex);
         GlobalMemoryStatusEx (&statex);
-		std::stringstream virtualMemory;
-		virtualMemory << statex.ullTotalVirtual;
-		std::stringstream physicalMemory;
-		physicalMemory << statex.ullTotalPhys;
+        std::stringstream virtualMemory;
+        virtualMemory << statex.ullTotalVirtual;
+        std::stringstream physicalMemory;
+        physicalMemory << statex.ullTotalPhys;
         theProperties.insert(std::make_pair("hardware.virtual.memory", virtualMemory.str() ));
         theProperties.insert(std::make_pair("hardware.physical.memory", physicalMemory.str() ));
-	  }
+      }
 
     }
     {
@@ -380,7 +382,7 @@ namespace zorba { namespace system {
       }
     }
 
-	{
+    {
       HKEY keyHandle;
       TCHAR value [1024];
       char valueC [1024];
@@ -396,11 +398,10 @@ namespace zorba { namespace system {
           theProperties.insert(std::make_pair("hardware.manufacturer", valueC));
       }
       RegCloseKey(keyHandle);
-	}
+    }
 
 
 #else
-#if 0 /* DOES NOT COMPILE ON MAC OS X */
     struct utsname osname;
     uname(&osname);
     theProperties.insert(std::make_pair("os.name", osname.sysname));
@@ -412,6 +413,18 @@ namespace zorba { namespace system {
     theProperties.insert(std::make_pair("user.name", getenv("USER")));
     theProperties.insert(std::make_pair("os.is64", "false"));
     {
+#ifdef __APPLE__
+      int mib[2];
+      size_t len = 4;
+      uint32_t res = 0;
+
+      mib[0] = CTL_HW;
+      mib[1] = HW_NCPU;
+      sysctl(mib, 2, &res, &len, NULL, NULL);
+      std::stringstream lStream;
+      lStream << res;
+      theProperties.insert(std::make_pair("hardware.physical.cpu", lStream.str()));
+#else
       countProcessors();
       std::stringstream logicalProcessor;
       std::stringstream physicalProcessor;
@@ -419,26 +432,38 @@ namespace zorba { namespace system {
       logicalProcessor << logical;
       physicalProcessor << physical;
       logicalPerPhysicalProcessors << cores;
-
+      theProperties.insert(std::make_pair("hardware.logical.per.physical.cpu", logicalPerPhysicalProcessors.str() ));
       theProperties.insert(std::make_pair("hardware.physical.cpu", physicalProcessor.str() ));
       theProperties.insert(std::make_pair("hardware.logical.cpu", logicalProcessor.str() ));
-      theProperties.insert(std::make_pair("hardware.logical.per.physical.cpu", logicalPerPhysicalProcessors.str() ));
+#endif
     }
     {
-	  struct sysinfo sys_info;
-	  if(sysinfo(&sys_info) == 0) {
-		long pages = sysconf(_SC_PHYS_PAGES);
-		long page_size = sysconf(_SC_PAGE_SIZE);
-		std::stringstream memory;
-		memory << sys_info.totalram;
-		std::stringstream swap;
-		swap << sys_info.totalswap;
-		theProperties.insert(std::make_pair("hardware.virtual.memory", swap.str() ));
-		theProperties.insert(std::make_pair("hardware.physical.memory", memory.str() ));
+# ifdef LINUX
+      struct sysinfo sys_info;
+      if(sysinfo(&sys_info) == 0) {
+        long pages = sysconf(_SC_PHYS_PAGES);
+        long page_size = sysconf(_SC_PAGE_SIZE);
+        std::stringstream memory;
+        memory << sys_info.totalram;
+        std::stringstream swap;
+        swap << sys_info.totalswap;
+        theProperties.insert(std::make_pair("hardware.virtual.memory", swap.str() ));
+        theProperties.insert(std::make_pair("hardware.physical.memory", memory.str() ));
       }
+# elif defined __APPLE__
+      int mib[2];
+      size_t len = 8;
+      uint64_t res = 0;
+
+      mib[0] = CTL_HW;
+      mib[1] = HW_MEMSIZE;
+      sysctl(mib, 2, &res, &len, NULL, NULL);
+      std::stringstream lStream;
+      lStream << res;
+      theProperties.insert(std::make_pair("hardware.physical.memory", lStream.str()));
+# endif
     }
 
-#endif /* 0 */
 #endif
 #ifdef LINUX
     theProperties.insert(std::make_pair("linux.distributor", ""));

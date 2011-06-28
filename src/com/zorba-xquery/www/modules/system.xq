@@ -81,7 +81,7 @@ declare variable $system:os-arch as xs:string := "os.arch";
 declare variable $system:os-is64 as xs:string := "os.is64";
 
 (:~
- : number of logical processors in the system
+ : number of logical processors in the system. This information is not available under Mac OS X.
  :)
 declare variable $system:hardware-logical-cpu as xs:string := "hardware.logical.cpu";
 
@@ -91,7 +91,7 @@ declare variable $system:hardware-logical-cpu as xs:string := "hardware.logical.
 declare variable $system:hardware-physical-cpu as xs:string := "hardware.physical.cpu";
 
 (:~
- : number of logical per physical processors in the system
+ : number of logical per physical processors in the system. This information is not available under Mac OS X.
  :)
 declare variable $system:hardware-logical-per-physical-cpu as xs:string := "hardware.logical.per.physical.cpu";
 
