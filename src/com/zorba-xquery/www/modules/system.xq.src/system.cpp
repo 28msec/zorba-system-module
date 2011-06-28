@@ -25,7 +25,9 @@
   #include <winreg.h>
 #else
   #include <sys/utsname.h>
+  #ifndef __APPLE__
   #include <sys/sysinfo.h>
+  #endif
 #endif
 
 #include <zorba/zorba_string.h>
@@ -398,6 +400,7 @@ namespace zorba { namespace system {
 
 
 #else
+#if 0 /* DOES NOT COMPILE ON MAC OS X */
     struct utsname osname;
     uname(&osname);
     theProperties.insert(std::make_pair("os.name", osname.sysname));
@@ -435,6 +438,7 @@ namespace zorba { namespace system {
       }
     }
 
+#endif /* 0 */
 #endif
 #ifdef LINUX
     theProperties.insert(std::make_pair("linux.distributor", ""));
