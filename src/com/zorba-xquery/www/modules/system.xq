@@ -26,6 +26,9 @@
  :)
 module namespace system = 'http://www.zorba-xquery.com/modules/system';
 
+declare namespace ver = "http://www.zorba-xquery.com/options/versioning";
+declare option ver:module-version "1.0";
+
 (:~
  : The name of the operating system.
  :)

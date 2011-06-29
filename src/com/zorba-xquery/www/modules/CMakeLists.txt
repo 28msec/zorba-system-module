@@ -11,6 +11,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-GENERATE_MODULE_LIBRARY(system "")
-  
+DECLARE_ZORBA_MODULE("http://www.zorba-xquery.com/modules/system" 1.0 "system.xq")
