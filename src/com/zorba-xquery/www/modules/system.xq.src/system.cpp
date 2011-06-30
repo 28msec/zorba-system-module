@@ -332,8 +332,8 @@ namespace zorba { namespace system {
       // http://msdn.microsoft.com/en-us/library/ms724832(v=VS.85).aspx
       std::string operativeSystem;
       theProperties.insert(std::make_pair("os.name", "Windows"));
-      countProcessors();
       {
+        countProcessors();
         std::stringstream logicalProcessors;
         logicalProcessors << processorPackageCount;
         std::stringstream physicalProcessors;
@@ -441,6 +441,8 @@ namespace zorba { namespace system {
 # ifdef LINUX
       struct sysinfo sys_info;
       if(sysinfo(&sys_info) == 0) {
+        long pages = sysconf(_SC_PHYS_PAGES);
+        long page_size = sysconf(_SC_PAGE_SIZE);
         std::stringstream memory;
         memory << sys_info.totalram;
         std::stringstream swap;
