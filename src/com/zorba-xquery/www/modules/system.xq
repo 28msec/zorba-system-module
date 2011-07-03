@@ -26,6 +26,8 @@
  :)
 module namespace system = 'http://www.zorba-xquery.com/modules/system';
 
+declare namespace ann = "http://www.zorba-xquery.com/annotations";
+
 declare namespace ver = "http://www.zorba-xquery.com/options/versioning";
 declare option ver:module-version "1.0";
 
@@ -163,7 +165,7 @@ declare variable $system:zorba-version-patch as xs:string := "zorba.version.patc
  : @param $name The name of the property.
  : @return The value of the asked property.
  :)
-declare %nondeterministic function system:property($name as xs:string) as xs:string? external;
+declare %ann:nondeterministic function system:property($name as xs:string) as xs:string? external;
 
 (:~
  : This function retrieves all names of all defined properties. These are
@@ -172,5 +174,5 @@ declare %nondeterministic function system:property($name as xs:string) as xs:str
  :
  : @return A list of all property names.
  :)
-declare %nondeterministic function system:properties() as xs:string* external;
+declare %ann:nondeterministic function system:properties() as xs:string* external;
 
