@@ -19,7 +19,7 @@
  : The properties which are accessible are all environment variables plus
  : the ones listed in this module as variables.
  : The variables are just defining string and are only there for a better
- : user experiance.
+ : user experience.
  :
  : @author Markus Pilman
  : @project external
@@ -81,7 +81,7 @@ declare variable $system:os-version as xs:string := "os.version";
 declare variable $system:os-arch as xs:string := "os.arch";
 
 (:~
- : True if system arquitecture is 64bits
+ : True if system architecture is 64bits
  :)
 declare variable $system:os-is64 as xs:string := "os.is64";
 
