@@ -441,8 +441,6 @@ namespace zorba { namespace system {
 # ifdef LINUX
       struct sysinfo sys_info;
       if(sysinfo(&sys_info) == 0) {
-        long pages = sysconf(_SC_PHYS_PAGES);
-        long page_size = sysconf(_SC_PAGE_SIZE);
         std::stringstream memory;
         memory << sys_info.totalram;
         std::stringstream swap;
