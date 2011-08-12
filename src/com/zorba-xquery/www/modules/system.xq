@@ -16,12 +16,29 @@ xquery version "3.0";
  : limitations under the License.
 :)
 (:~
- : The system module allows users to access information of the operating
- : system and the XQuery processor.
- : The properties which are accessible are all environment variables plus
- : the ones listed in this module as variables.
- : The variables are just defining string and are only there for a better
- : user experience.
+ : The system module allows developers to access system properties.
+ : Part of these system properties are venvironment variables,
+ : local variable to the process running Zorba, and properties defined by Zorba.
+ : <br />
+ : To avoid conflicts between environment variables and properties defined by Zorba,
+ : all environment variables are prefixed with <i>env.</i>.
+ : <br />
+ : For instance, the following query: <br />
+ : <pre class="brush: xquery;">
+ : import module namespace system = "http://www.zorba-xquery.com/modules/system";
+ : 
+ : for $prop in system:properties()
+ : return concat($prop, ": ", system:property($prop), "
+ : ")
+ : </pre>
+ : <br />
+ : Will output:
+ : <pre>
+ : env.TERM_PROGRAM: Apple_Terminal
+ : ...
+ : </pre>
+ : In this example, it is important to notice that the environnement variable PATH
+ : with the key env.PATH.
  :
  : @author Markus Pilman
  : @project external
@@ -34,41 +51,51 @@ declare namespace ver = "http://www.zorba-xquery.com/options/versioning";
 declare option ver:module-version "1.0";
 
 (:~
- : The name of the operating system.
+ : The name of the operating system (os.name).
  :)
 declare variable $system:os-name as xs:string := "os.name";
 
 (:~
- : The name of the computer the process is running on.
+ : The name of the computer the process is running on (os.node.name).
  :)
 declare variable $system:os-node-name as xs:string := "os.node.name";
 
 (:~
- : ONLY WINDOWS: The major version number of the Windows installation or
- : an empty string if the process does not run on a Windows installation.
+ : The major version number of the Windows installation or
+ : an empty string if the process does not run on a Windows installation
+ : (os.version.major).
+ : <b>Works on Windows only.</b>
  :)
 declare variable $system:os-version-major as xs:string := "os.version.major";
 
 (:~
- : ONLY WINDOWS: The minor version number of the Windows installation or
- : an empty string if the process does not run on a Windows installation.
+ : The minor version number of the Windows installation or
+ : an empty string if the process does not run on a Windows installation
+ : (os.version.minor).
+ : <b>Works on Windows only.</b>
  :)
 declare variable $system:os-version-minor as xs:string := "os.version.minor";
 
 (:~
- : ONLY WINDOWS: The build number of the Windows installation or
- : an empty string if the process does not run on a Windows installation.
+ : The build number of the Windows installation or
+ : an empty string if the process does not run on a Windows installation
+ : (os.version.build).
+ : <b>Works on Windows only.</b>
  :)
 declare variable $system:os-version-build as xs:string := "os.version.build";
 
 (:~
- : ONLY UNIX: The release of this UNIX installation or
- : an empty string if the process does not run on a UNIX/Linux installation.
+ : The release of this UNIX installation or
+ : an empty string if the process does not run on a UNIX/Linux installation
+ : (os.version.release).
+ : <b>Works on UNIX based operating systems only.</b>
  :)
 declare variable $system:os-version-release as xs:string := "os.version.release";
 (:~
- : ONLY UNIX: The version of this UNIX installation or
- : an empty string if the process does not run on a UNIX/Linux installation.
+ : The version of this UNIX installation or
+ : an empty string if the process does not run on a UNIX/Linux installation
+ : (os.version.version).
+ : <b>Works on UNIX based operating systems only.</b>
  :)
 declare variable $system:os-version-version as xs:string := "os.version.version";
 
@@ -78,103 +105,105 @@ declare variable $system:os-version-version as xs:string := "os.version.version"
 declare variable $system:os-version as xs:string := "os.version";
 
 (:~
- : The name of the processor architecture (for example x86 or x86_64).
+ : The name of the processor architecture (os.arch).
+ : For example x86 or x86_64.
  :)
 declare variable $system:os-arch as xs:string := "os.arch";
 
 (:~
- : True if system architecture is 64bits
+ : True if system architecture is 64bits (os.is64).
  :)
 declare variable $system:os-is64 as xs:string := "os.is64";
 
 (:~
- : number of logical processors in the system. This information is not available under Mac OS X.
+ : Number of logical processors in the system (hardware.logical.cpu).
+ : This information is not available under Mac OS X.
  :)
 declare variable $system:hardware-logical-cpu as xs:string := "hardware.logical.cpu";
 
 (:~
- : number of physical processors in the system
+ : Number of physical processors in the system (hardware.logical.cpu).
  :)
 declare variable $system:hardware-physical-cpu as xs:string := "hardware.physical.cpu";
 
 (:~
- : number of logical per physical processors in the system. This information is not available under Mac OS X.
+ : number of logical per physical processors in the system (hardware.logical.per.physical.cpu).
+ : This information is not available under Mac OS X.
  :)
 declare variable $system:hardware-logical-per-physical-cpu as xs:string := "hardware.logical.per.physical.cpu";
 
 (:~
- : physical memory available
+ : Physical memory available (hardware.physical.memory).
  :)
 declare variable $system:hardware-physical-memory as xs:string := "hardware.physical.memory";
 (:~
- : virtual memory available
+ : Virtual memory available (hardware.virtual.memory).
  :)
 declare variable $system:hardware-virtual-memory as xs:string := "hardware.virtual.memory";
 (:~
- : Gets the hardware manufacturer
+ : Gets the hardware manufacturer (hardware.manufacturer).
  :)
 declare variable $system:hardware-manufacturer as xs:string := "hardware.manufacturer";
 
 (:~
- : The linux distribution, zorba is running on. This of course is only
- : available under Linux.
+ : The Linux distribution, Zorba is running on (linux.distributor).
+ : <b>Works on UNIX based operating systems only.</b>
  :)
 declare variable $system:linux-distributor as xs:string := "linux.distributor";
 
 (:~
- : The version of the linux distribution, zorba is running on. This of course is only
- : available under Linux.
+ : The version of the Linux distribution, Zorba is running on (linux.distributor.version).
+ : <b>Works on UNIX based operating systems only.</b>
  :)
 declare variable $system:linux-distributor-version as xs:string := "linux.distributor.version";
 
 (:~
- : The username, with which this process was started.
+ : The username, with which this process was started (user.name).
  :)
 declare variable $system:user-name as xs:string := "user.name";
 
 (:~
- : The zorba module path, that is the paths in which zorba looks
- : for modules.
+ : The Zorba module path, that is the paths in which Zorba looks
+ : for modules (zorba.module.path).
  :)
 declare variable $system:zorba-module-path as xs:string := "zorba.module.path";
 
 (:~
- : Helper variable to get the zorba version in the format Major.Minor.Patch
+ : Zorba version in the format Major.Minor.Patch (zorba.version).
  :)
 declare variable $system:zorba-version as xs:string := "zorba.version";
 
 (:~
- : Helper variable to get the zorba major version
+ : Zorba major version (zorba.version.major).
  :)
 declare variable $system:zorba-version-major as xs:string := "zorba.version.major";
 
 (:~
- : Helper variable to get the zorba minor version
+ : Zorba minor version (zorba.version.minor).
  :)
 declare variable $system:zorba-version-minor as xs:string := "zorba.version.minor";
 
 (:~
- : Helper variable to get the zorba patch version
+ : Zorba patch version (zorba.version.patch).
  :)
 declare variable $system:zorba-version-patch as xs:string := "zorba.version.patch";
 
 (:~
- : Gets a property with a given name. If the property is not found, the function
- : will return an empty sequence. To access a environment variable, the user needs
- : to prefix the name of the variable with "env.". For example: to get the PATH,
- : one can use system:property("env.PATH").
+ : Gets the system property indicated by the specified key.
  :
- : @param $name The name of the property.
- : @return The value of the asked property.
+ : @param $key The name of the system property.
+ : @return The string value of the system property, or an empty sequence if there is no property with that key.
  :)
-declare %ann:nondeterministic function system:property($name as xs:string) as xs:string? external;
+declare %ann:nondeterministic function system:property($key as xs:string) as xs:string? external;
 
 (:~
- : This function retrieves all names of all defined properties. These are
- : the ones defined in this module as variables and all defined environment
- : variables.
+ : This function retrieves the names of the current system properties.
+ : This list includes environment variables, local variable to the process running Zorba, and properties defined by Zorba.
+ : <br />
+ : To avoid conflicts between environment variables and properties defined by Zorba,
+ : all environment variables are prefixed with <i>env.</i>.
  :
- : @return A list of all property names.
+ : @return List of all system properties.
  :)
 declare %ann:nondeterministic function system:properties() as xs:string* external;
 
