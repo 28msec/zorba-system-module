@@ -17,7 +17,7 @@ xquery version "3.0";
 :)
 (:~
  : The system module allows developers to access system properties.
- : Part of these system properties are venvironment variables,
+ : Part of these system properties are environment variables,
  : local variable to the process running Zorba, and properties defined by Zorba.
  : <br />
  : To avoid conflicts between environment variables and properties defined by Zorba,
