@@ -403,14 +403,20 @@ namespace zorba { namespace system {
 
 #else
     struct utsname osname;
-    uname(&osname);
-    theProperties.insert(std::make_pair("os.name", osname.sysname));
-    theProperties.insert(std::make_pair("os.node.name", osname.nodename));
-    theProperties.insert(std::make_pair("os.version.release", osname.release));
-    theProperties.insert(std::make_pair("os.version.version", osname.version));
-    theProperties.insert(std::make_pair("os.version", osname.release));
-    theProperties.insert(std::make_pair("os.arch", osname.machine));
-    theProperties.insert(std::make_pair("user.name", getenv("USER")));
+    if (uname(&osname) == 0)
+    {
+      theProperties.insert(std::make_pair("os.name", osname.sysname));
+      theProperties.insert(std::make_pair("os.node.name", osname.nodename));
+      theProperties.insert(std::make_pair("os.version.release", osname.release));
+      theProperties.insert(std::make_pair("os.version.version", osname.version));
+      theProperties.insert(std::make_pair("os.version", osname.release));
+      theProperties.insert(std::make_pair("os.arch", osname.machine));
+    }
+    char* lUser = getenv("USER");
+    if (lUser)
+    {
+      theProperties.insert(std::make_pair("user.name", lUser));
+    }
     theProperties.insert(std::make_pair("os.is64", "false"));
     {
 #ifdef __APPLE__

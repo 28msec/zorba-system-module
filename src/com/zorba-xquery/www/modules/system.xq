@@ -159,6 +159,8 @@ declare variable $system:linux-distributor-version as xs:string := "linux.distri
 
 (:~
  : The username, with which this process was started (user.name).
+ : On Unix, this variable is only available if the USER environment
+ : variable is set (e.g. it might not be available in a cronjob).
  :)
 declare variable $system:user-name as xs:string := "user.name";
 
