@@ -45,7 +45,7 @@ xquery version "3.0";
  :)
 module namespace system = 'http://www.zorba-xquery.com/modules/system';
 
-declare namespace ann = "http://www.zorba-xquery.com/annotations";
+declare namespace an = "http://www.zorba-xquery.com/annotations";
 
 declare namespace ver = "http://www.zorba-xquery.com/options/versioning";
 declare option ver:module-version "1.0";
@@ -196,7 +196,7 @@ declare variable $system:zorba-version-patch as xs:string := "zorba.version.patc
  : @param $key The name of the system property.
  : @return The string value of the system property, or an empty sequence if there is no property with that key.
  :)
-declare %ann:nondeterministic function system:property($key as xs:string) as xs:string? external;
+declare %an:nondeterministic function system:property($key as xs:string) as xs:string? external;
 
 (:~
  : This function retrieves the names of the current system properties.
@@ -207,5 +207,5 @@ declare %ann:nondeterministic function system:property($key as xs:string) as xs:
  :
  : @return List of all system properties.
  :)
-declare %ann:nondeterministic function system:properties() as xs:string* external;
+declare %an:nondeterministic function system:properties() as xs:string* external;
 
