@@ -191,7 +191,7 @@ namespace zorba { namespace system {
 
   static void countProcessors() {
     logical=0;
-    cores=0;
+    cores=1; // per default: single core processor
     physical=0;
 
     std::ifstream in("/proc/cpuinfo");
