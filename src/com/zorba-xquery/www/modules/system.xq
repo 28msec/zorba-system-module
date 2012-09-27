@@ -24,7 +24,7 @@ xquery version "3.0";
  : all environment variables are prefixed with <i>env.</i>.
  : <br />
  : For instance, the following query: <br />
- : <pre class="brush: xquery;">
+ : <pre class="ace-static">
  : import module namespace system = "http://www.zorba-xquery.com/modules/system";
  : 
  : for $prop in system:properties()
@@ -33,7 +33,7 @@ xquery version "3.0";
  : </pre>
  : <br />
  : Will output:
- : <pre>
+ : <pre class="ace-static">
  : env.TERM_PROGRAM: Apple_Terminal
  : ...
  : </pre>
@@ -41,7 +41,7 @@ xquery version "3.0";
  : with the key env.PATH.
  :
  : @author Markus Pilman
- : @project external
+ : @project Zorba/IO/System
  :)
 module namespace system = 'http://www.zorba-xquery.com/modules/system';
 
