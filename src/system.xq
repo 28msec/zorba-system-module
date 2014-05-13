@@ -23,7 +23,7 @@ jsoniq version "1.0";
  : all environment variables are prefixed with <i>env.</i>.<p/>
  : For instance, the following query: <p/>
  : <pre class="ace-static" ace-mode="xquery">
- : import module namespace system = "http://www.zorba-xquery.com/modules/system";
+ : import module namespace system = "http://zorba.io/modules/system";
  : 
  : for $prop in system:properties()
  : return concat($prop, ": ", system:property($prop), "
