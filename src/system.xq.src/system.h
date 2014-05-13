@@ -25,19 +25,54 @@
 
 namespace zorba { namespace system {
   class SystemModule : public ExternalModule {
+    protected:
+      static zorba::Item globalOSName;
+      static zorba::Item globalOSNodeName;
+      static zorba::Item globalOSVersionMajor;
+      static zorba::Item globalOSVersionMinor;
+      static zorba::Item globalOSVersionBuild;
+      static zorba::Item globalOSVersionRelease;
+      static zorba::Item globalOSVersionVersion;
+      static zorba::Item globalOSVersion;
+      static zorba::Item globalOSArch;
+      static zorba::Item globalOSis64;
+      static zorba::Item globalHWLogicalCPU;
+      static zorba::Item globalHWPhysicalCPU;
+      static zorba::Item globalHWLogicalPerPhysicalCPU;
+      static zorba::Item globalHWPhysicalMemory;
+      static zorba::Item globalHWVirtualMemory;
+      static zorba::Item globalHWManufacturer;
+      static zorba::Item globalLinuxDistributor;
+      static zorba::Item globalLinuxDistributorVersion;
+      static zorba::Item globalUserName;
+      static zorba::Item globalZorbaModulePath;
+      static zorba::Item globalZorbaVersion;
+      static zorba::Item globalZorbaVersionMajor;
+      static zorba::Item globalZorbaVersionMinor;
+      static zorba::Item globalZorbaVersionPatch;
     private:
       ExternalFunction* thePropertyFunction;
       ExternalFunction* thePropertiesFunction;
       const static String SYSTEM_MODULE_NAMESPACE;
     public:
+      enum GLOBAL_KEY { OS_NAME, OS_NODE_NAME, OS_VER_MAJOR, OS_VER_MINOR,
+                        OS_VER_BUILD, OS_VER_RELEASE, OS_VER_VERSION, OS_VER,
+                        OS_ARCH, OS_IS64, HARDWARE_lOGICAL_CPU, HARDWARE_PHYSICAL_CPU,
+                        HARDWARE_LOGICAL_PER_PHYSICAL_CPU, HARDWARE_PHYSICAL_MEMORY,
+                        HARDWARE_VIRTUAL_MEMORY, HARDWARE_MANUFACTURER, LINUX_DISTRIBUTOR,
+                        LINUX_DISTRIBUTOR_VERSION, USER_NAME, ZORBA_MODULE_PATH, ZORBA_VER, ZORBA_VER_MAJOR,
+                        ZORBA_VER_MINOR, ZORBA_VER_PATCH };
+                        
       SystemModule();
       virtual ~SystemModule();
-    public:
+      
       virtual String getURI() const { return SYSTEM_MODULE_NAMESPACE; }
 
       virtual ExternalFunction* getExternalFunction(const String& localName);
 
       virtual void destroy();
+      
+      static zorba::Item& getGlobalKey(enum GLOBAL_KEY g);
   };
 
   class SystemFunction {

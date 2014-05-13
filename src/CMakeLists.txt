@@ -14,6 +14,4 @@
 
 # all external module libraries are generated in the directory
 # of the corresponding .xq file
-MESSAGE(STATUS "Add com")
-ADD_SUBDIRECTORY(com)
-MESSAGE(STATUS "End modules")
+DECLARE_ZORBA_MODULE (URI "http://zorba.io/modules/system" VERSION 1.0 FILE "system.xq")

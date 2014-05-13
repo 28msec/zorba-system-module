@@ -55,7 +55,33 @@ extern char** environ;
 
 namespace zorba { namespace system {
 
-  const String SystemModule::SYSTEM_MODULE_NAMESPACE = "http://www.zorba-xquery.com/modules/system";
+  const String SystemModule::SYSTEM_MODULE_NAMESPACE = "http://zorba.io/modules/system";
+
+  // global keys
+  zorba::Item SystemModule::globalOSName;
+  zorba::Item SystemModule::globalOSNodeName;
+  zorba::Item SystemModule::globalOSVersionMajor;
+  zorba::Item SystemModule::globalOSVersionMinor;
+  zorba::Item SystemModule::globalOSVersionBuild;
+  zorba::Item SystemModule::globalOSVersionRelease;
+  zorba::Item SystemModule::globalOSVersionVersion;
+  zorba::Item SystemModule::globalOSVersion;
+  zorba::Item SystemModule::globalOSArch;
+  zorba::Item SystemModule::globalOSis64;
+  zorba::Item SystemModule::globalHWLogicalCPU;
+  zorba::Item SystemModule::globalHWPhysicalCPU;
+  zorba::Item SystemModule::globalHWLogicalPerPhysicalCPU;
+  zorba::Item SystemModule::globalHWPhysicalMemory;
+  zorba::Item SystemModule::globalHWVirtualMemory;
+  zorba::Item SystemModule::globalHWManufacturer;
+  zorba::Item SystemModule::globalLinuxDistributor;
+  zorba::Item SystemModule::globalLinuxDistributorVersion;
+  zorba::Item SystemModule::globalUserName;
+  zorba::Item SystemModule::globalZorbaModulePath;
+  zorba::Item SystemModule::globalZorbaVersion;
+  zorba::Item SystemModule::globalZorbaVersionMajor;
+  zorba::Item SystemModule::globalZorbaVersionMinor;
+  zorba::Item SystemModule::globalZorbaVersionPatch;
 
 #ifdef WIN32
   typedef BOOL (WINAPI *LPFN_GLPI)(
@@ -252,6 +278,30 @@ namespace zorba { namespace system {
   SystemModule::SystemModule()
     : thePropertyFunction(0), thePropertiesFunction(0)
   {
+      globalOSName = Zorba::getInstance(0)->getItemFactory()->createString("os.name");
+      globalOSNodeName = Zorba::getInstance(0)->getItemFactory()->createString("os.node.name");
+      globalOSVersionMajor = Zorba::getInstance(0)->getItemFactory()->createString("os.version.major");
+      globalOSVersionMinor = Zorba::getInstance(0)->getItemFactory()->createString("os.version.minor");
+      globalOSVersionBuild = Zorba::getInstance(0)->getItemFactory()->createString("os.version.build");
+      globalOSVersionRelease = Zorba::getInstance(0)->getItemFactory()->createString("os.version.release");
+      globalOSVersionVersion = Zorba::getInstance(0)->getItemFactory()->createString("os.version.version");
+      globalOSVersion = Zorba::getInstance(0)->getItemFactory()->createString("os.version");
+      globalOSArch = Zorba::getInstance(0)->getItemFactory()->createString("os.arch");
+      globalOSis64 = Zorba::getInstance(0)->getItemFactory()->createString("os.is64");
+      globalHWLogicalCPU = Zorba::getInstance(0)->getItemFactory()->createString("hardware.logical.cpu");
+      globalHWPhysicalCPU = Zorba::getInstance(0)->getItemFactory()->createString("hardware.physical.cpu");
+      globalHWLogicalPerPhysicalCPU = Zorba::getInstance(0)->getItemFactory()->createString("hardware.logical.per.physical.cpu");
+      globalHWPhysicalMemory = Zorba::getInstance(0)->getItemFactory()->createString("hardware.physical.memory");
+      globalHWVirtualMemory = Zorba::getInstance(0)->getItemFactory()->createString("hardware.virtual.memory");
+      globalHWManufacturer = Zorba::getInstance(0)->getItemFactory()->createString("hardware.manufacturer");
+      globalLinuxDistributor = Zorba::getInstance(0)->getItemFactory()->createString("linux.distributor");
+      globalLinuxDistributorVersion = Zorba::getInstance(0)->getItemFactory()->createString("linux.distributor.version");
+      globalUserName = Zorba::getInstance(0)->getItemFactory()->createString("user.name");
+      globalZorbaModulePath = Zorba::getInstance(0)->getItemFactory()->createString("zorba.module.path");
+      globalZorbaVersion = Zorba::getInstance(0)->getItemFactory()->createString("zorba.version");
+      globalZorbaVersionMajor = Zorba::getInstance(0)->getItemFactory()->createString("zorba.version.major");
+      globalZorbaVersionMinor = Zorba::getInstance(0)->getItemFactory()->createString("zorba.version.minor");
+      globalZorbaVersionPatch = Zorba::getInstance(0)->getItemFactory()->createString("zorba.version.patch");
   }
 
   ExternalFunction* SystemModule::getExternalFunction(const String& localName) {
@@ -276,6 +326,39 @@ namespace zorba { namespace system {
     delete thePropertiesFunction;
   }
 
+  zorba::Item&
+  SystemModule::getGlobalKey(SystemModule::GLOBAL_KEY g)
+  {
+      switch(g)
+      {
+      case OS_NAME: return globalOSName;
+      case OS_NODE_NAME: return globalOSNodeName;
+      case OS_VER_MAJOR: return globalOSVersionMajor;
+      case OS_VER_MINOR: return globalOSVersionMinor;
+      case OS_VER_BUILD: return globalOSVersionBuild;
+      case OS_VER_RELEASE: return globalOSVersionRelease;
+      case OS_VER_VERSION: return globalOSVersionVersion;
+      case OS_VER: return globalOSVersion;
+      case OS_ARCH: return globalOSArch;
+      case OS_IS64: return globalOSis64;
+      case HARDWARE_lOGICAL_CPU: return globalHWLogicalCPU;
+      case HARDWARE_PHYSICAL_CPU: return globalHWPhysicalCPU;
+      case HARDWARE_LOGICAL_PER_PHYSICAL_CPU: return globalHWLogicalPerPhysicalCPU;
+      case HARDWARE_PHYSICAL_MEMORY: return globalHWPhysicalMemory;
+      case HARDWARE_VIRTUAL_MEMORY: return globalHWVirtualMemory;
+      case HARDWARE_MANUFACTURER: return globalHWManufacturer;
+      case LINUX_DISTRIBUTOR: return globalLinuxDistributor;
+      case LINUX_DISTRIBUTOR_VERSION: return globalLinuxDistributorVersion;
+      case USER_NAME: return globalUserName;
+      case ZORBA_MODULE_PATH: return globalZorbaModulePath;
+      case ZORBA_VER: return globalZorbaVersion;
+      case ZORBA_VER_MAJOR: return globalZorbaVersionMajor;
+      case ZORBA_VER_MINOR: return globalZorbaVersionMinor;
+      case ZORBA_VER_PATCH: return globalZorbaVersionPatch;
+      // should never hit this code but still ...
+      default: return globalOSName;
+      }
+  }
 
   SystemFunction::SystemFunction(const ExternalModule* aModule)
     : theModule(aModule), theFactory(Zorba::getInstance(0)->getItemFactory())
@@ -291,7 +374,7 @@ namespace zorba { namespace system {
         nodeNameC[i] = static_cast<char>(nodeName[i]);
       }
       nodeNameC[nodeNameLength] = NULL;  // Terminate string
-      theProperties.insert(std::make_pair("os.node.name", nodeNameC));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_NODE_NAME).getStringValue(), nodeNameC));
     }
 
     {
@@ -325,13 +408,13 @@ namespace zorba { namespace system {
         minor = sMinor.str();
         build = sBuild.str();
       }
-      theProperties.insert(std::make_pair("os.version.major", major));
-      theProperties.insert(std::make_pair("os.version.minor", minor));
-      theProperties.insert(std::make_pair("os.version.build", build));
-      theProperties.insert(std::make_pair("os.version", major + "." + minor + "." + build));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_VER_MAJOR).getStringValue(), major));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_VER_MINOR).getStringValue(), minor));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_VER_BUILD).getStringValue(), build));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_VER).getString(), major + "." + minor + "." + build));
       // http://msdn.microsoft.com/en-us/library/ms724832(v=VS.85).aspx
       std::string operativeSystem;
-      theProperties.insert(std::make_pair("os.name", "Windows"));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_NAME).getStringValue(), "Windows"));
       {
         countProcessors();
         std::stringstream logicalProcessors;
@@ -340,9 +423,9 @@ namespace zorba { namespace system {
         physicalProcessors << logicalProcessorCount;
         std::stringstream logicalPerPhysicalProcessors;
         logicalPerPhysicalProcessors << (logicalProcessorCount / processorPackageCount );
-        theProperties.insert(std::make_pair("hardware.physical.cpu", logicalProcessors.str() ));
-        theProperties.insert(std::make_pair("hardware.logical.cpu", physicalProcessors.str() ));
-        theProperties.insert(std::make_pair("hardware.logical.per.physical.cpu", logicalPerPhysicalProcessors.str() ));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_PHYSICAL_CPU).getStringValue(), logicalProcessors.str() ));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_lOGICAL_CPU).getStringValue(), physicalProcessors.str() ));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_LOGICAL_PER_PHYSICAL_CPU).getStringValue(), logicalPerPhysicalProcessors.str() ));
       }
       {
         MEMORYSTATUSEX statex;
@@ -352,8 +435,8 @@ namespace zorba { namespace system {
         virtualMemory << statex.ullTotalVirtual;
         std::stringstream physicalMemory;
         physicalMemory << statex.ullTotalPhys;
-        theProperties.insert(std::make_pair("hardware.virtual.memory", virtualMemory.str() ));
-        theProperties.insert(std::make_pair("hardware.physical.memory", physicalMemory.str() ));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_VIRTUAL_MEMORY).getStringValue(), virtualMemory.str() ));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_PHYSICAL_MEMORY).getStringValue(), physicalMemory.str() ));
       }
 
     }
@@ -365,20 +448,20 @@ namespace zorba { namespace system {
       for (DWORD i = 0; i < userNameLength; ++i) {
         userNameC[i] = static_cast<char>(userName[i]);
       }
-      theProperties.insert(std::make_pair("user.name", userNameC));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::USER_NAME).getStringValue(), userNameC));
     }
     {
       SYSTEM_INFO info;
       GetSystemInfo(&info);
       if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
-        theProperties.insert(std::make_pair("os.arch", "x86_64"));
-        theProperties.insert(std::make_pair("os.is64", "true"));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_ARCH).getStringValue(), "x86_64"));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_IS64).getStringValue(), "true"));
       } else if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_IA64) {
-        theProperties.insert(std::make_pair("os.arch", "ia64"));
-        theProperties.insert(std::make_pair("os.is64", "true"));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_ARCH).getStringValue(), "ia64"));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_IS64).getStringValue(), "true"));
       } else if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
-        theProperties.insert(std::make_pair("os.arch", "i386"));
-        theProperties.insert(std::make_pair("os.is64", "false"));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_ARCH).getStringValue(), "i386"));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_IS64).getStringValue(), "false"));
       }
     }
 
@@ -395,7 +478,7 @@ namespace zorba { namespace system {
           valueC[i] = static_cast<char>(value[i]);
         }
         if (size > 0)
-          theProperties.insert(std::make_pair("hardware.manufacturer", valueC));
+          theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_MANUFACTURER).getStringValue(), valueC));
       }
       RegCloseKey(keyHandle);
     }
@@ -405,19 +488,19 @@ namespace zorba { namespace system {
     struct utsname osname;
     if (uname(&osname) == 0)
     {
-      theProperties.insert(std::make_pair("os.name", osname.sysname));
-      theProperties.insert(std::make_pair("os.node.name", osname.nodename));
-      theProperties.insert(std::make_pair("os.version.release", osname.release));
-      theProperties.insert(std::make_pair("os.version.version", osname.version));
-      theProperties.insert(std::make_pair("os.version", osname.release));
-      theProperties.insert(std::make_pair("os.arch", osname.machine));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_NAME).getStringValue(), osname.sysname));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_NODE_NAME).getStringValue(), osname.nodename));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_VER_RELEASE).getStringValue(), osname.release));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_VER_VERSION).getStringValue(), osname.version));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_VER).getStringValue(), osname.release));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_ARCH).getStringValue(), osname.machine));
     }
     char* lUser = getenv("USER");
     if (lUser)
     {
-      theProperties.insert(std::make_pair("user.name", lUser));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::USER_NAME).getStringValue(), lUser));
     }
-    theProperties.insert(std::make_pair("os.is64", "false"));
+    theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::OS_IS64).getStringValue(), "false"));
     {
 #ifdef __APPLE__
       int mib[2];
@@ -429,7 +512,7 @@ namespace zorba { namespace system {
       sysctl(mib, 2, &res, &len, NULL, NULL);
       std::stringstream lStream;
       lStream << res;
-      theProperties.insert(std::make_pair("hardware.physical.cpu", lStream.str()));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_PHYSICAL_CPU).getStringValue(), lStream.str()));
 #else
       countProcessors();
       std::stringstream logicalProcessor;
@@ -438,9 +521,9 @@ namespace zorba { namespace system {
       logicalProcessor << logical;
       physicalProcessor << physical;
       logicalPerPhysicalProcessors << cores;
-      theProperties.insert(std::make_pair("hardware.logical.per.physical.cpu", logicalPerPhysicalProcessors.str() ));
-      theProperties.insert(std::make_pair("hardware.physical.cpu", physicalProcessor.str() ));
-      theProperties.insert(std::make_pair("hardware.logical.cpu", logicalProcessor.str() ));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_LOGICAL_PER_PHYSICAL_CPU).getStringValue(), logicalPerPhysicalProcessors.str() ));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_PHYSICAL_CPU).getStringValue(), physicalProcessor.str() ));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_lOGICAL_CPU).getStringValue(), logicalProcessor.str() ));
 #endif
     }
     {
@@ -451,8 +534,8 @@ namespace zorba { namespace system {
         memory << sys_info.totalram;
         std::stringstream swap;
         swap << sys_info.totalswap;
-        theProperties.insert(std::make_pair("hardware.virtual.memory", swap.str() ));
-        theProperties.insert(std::make_pair("hardware.physical.memory", memory.str() ));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_VIRTUAL_MEMORY).getStringValue(), swap.str() ));
+        theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_PHYSICAL_MEMORY).getStringValue(), memory.str() ));
       }
 # elif defined __APPLE__
       int mib[2];
@@ -464,19 +547,19 @@ namespace zorba { namespace system {
       sysctl(mib, 2, &res, &len, NULL, NULL);
       std::stringstream lStream;
       lStream << res;
-      theProperties.insert(std::make_pair("hardware.physical.memory", lStream.str()));
+      theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::HARDWARE_PHYSICAL_MEMORY).getStringValue(), lStream.str()));
 # endif
     }
 
 #endif
 #ifdef LINUX
-    theProperties.insert(std::make_pair("linux.distributor", ""));
-    theProperties.insert(std::make_pair("linux.distributor.version", ""));
+    theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::LINUX_DISTRIBUTOR).getStringValue(), ""));
+    theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::LINUX_DISTRIBUTOR_VERSION).getStringValue(), ""));
 #endif
-    theProperties.insert(std::make_pair("zorba.version", Zorba::version().getVersion()));
-    theProperties.insert(std::make_pair("zorba.version.major", intToString(Zorba::version().getMajorVersion())));
-    theProperties.insert(std::make_pair("zorba.version.minor", intToString(Zorba::version().getMinorVersion())));
-    theProperties.insert(std::make_pair("zorba.version.patch", intToString(Zorba::version().getPatchVersion())));
+    theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::ZORBA_VER).getStringValue(), Zorba::version().getVersion()));
+    theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::ZORBA_VER_MAJOR).getStringValue(), intToString(Zorba::version().getMajorVersion())));
+    theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::ZORBA_VER_MINOR).getStringValue(), intToString(Zorba::version().getMinorVersion())));
+    theProperties.insert(std::make_pair(SystemModule::getGlobalKey(SystemModule::ZORBA_VER_PATCH).getStringValue(), intToString(Zorba::version().getPatchVersion())));
   }
 
   String SystemFunction::intToString(int v) {
@@ -552,7 +635,7 @@ namespace zorba { namespace system {
       lRes.push_back(lItem);
     }
     // insert the zorba module path
-    lRes.push_back(theFactory->createString("zorba.module.path"));
+    lRes.push_back(SystemModule::getGlobalKey(SystemModule::ZORBA_MODULE_PATH));
     return ItemSequence_t(new VectorItemSequence(lRes));
   }
 
@@ -567,7 +650,7 @@ namespace zorba { namespace system {
     arg0_iter->close();
     String envS = item.getStringValue();
     String lRes;
-    if (envS == "zorba.module.path") {
+    if (envS == SystemModule::getGlobalKey(SystemModule::ZORBA_MODULE_PATH).getStringValue().str()) {
       std::vector<String> lModulePaths;
       sctx->getFullModulePaths(lModulePaths);
       if (lModulePaths.size() == 0)
@@ -587,9 +670,9 @@ namespace zorba { namespace system {
         return ItemSequence_t(new EmptySequence());
       }
 #ifdef LINUX
-    } else if (envS == "linux.distributor") {
+    } else if (envS == SystemModule::getGlobalKey(SystemModule::LINUX_DISTRIBUTOR).getStringValue().str()) {
       lRes = getDistribution().first;
-    } else if (envS == "linux.distributor.version") {
+    } else if (envS == SystemModule::getGlobalKey(SystemModule::LINUX_DISTRIBUTOR_VERSION).getStringValue().str()) {
       lRes = getDistribution().second;
 #endif
     } else {
