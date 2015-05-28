@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+MESSAGE(STATUS "")
+MESSAGE(STATUS "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+MESSAGE(STATUS "Configuring external module <system>")
+MESSAGE(STATUS "-------------------------------------------------------------")
+MESSAGE(STATUS "")
+
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT (zorba_system_module)
 ENABLE_TESTING ()
 INCLUDE (CTest)
-
+  
 LIST (APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake_modules")
 
 FIND_PACKAGE (Zorba REQUIRED HINTS "${ZORBA_BUILD_DIR}")
@@ -27,3 +33,8 @@ ADD_TEST_DIRECTORY("${PROJECT_SOURCE_DIR}/test")
 ADD_SUBDIRECTORY("src")
 
 DONE_DECLARING_ZORBA_URIS()
+
+MESSAGE(STATUS "")
+MESSAGE(STATUS "-------------------------------------------------------------")
+MESSAGE(STATUS "Configuration SUCCEEDED for external module <system>")
+MESSAGE(STATUS "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
